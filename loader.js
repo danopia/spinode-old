@@ -10,6 +10,7 @@ var Loader = module.exports = function () {
   this.metaStream = new Emitter();
   this.metaParser = new mm(this.metaStream);
   this.metaParser.on('metadata', function (result) {
+    this.metadata = result;
     this.emit('metadata', result);
   }.bind(this));
   
@@ -20,11 +21,12 @@ util.inherits(Loader, Emitter);
 
 Loader.prototype.getChunk = function (idx) {
   var buff = this.chunks[idx];
+  if (!buff) return [];
   var samples = new Array(buff.length / 4);
   for (var i = 0; i < samples.length; i++) {
-    samples[i] = {
-      l: buff.readInt16LE(i * 4    ),
-      r: buff.readInt16LE(i * 4 + 2)};
+    samples[i] = [
+      buff.readInt16LE(i * 4    ),
+      buff.readInt16LE(i * 4 + 2)];
   }
   return samples;
 };
@@ -41,6 +43,7 @@ Loader.prototype.loadMp3 = function (stream) {
   }.bind(this));
   
   this.decoder.on('format', function (fmt) {
+    this.format = fmt;
     this.emit('format', fmt);
   }.bind(this));
   
@@ -103,72 +106,9 @@ Loader.prototype.loadMp3Old = function (stream) {
     if (buffLen)
       this.chunks.push(buff.slice(buffOff, buffLen + buffOff));
     
-    console.log('done,', this.chunks.length, 'chunks');
+    console.log('done loading', this.chunks.length, 'chunks');
+    this.loaded = true;
     this.emit('loaded');
   }.bind(this));
 };
 
-
-
-/*var raw = new Buffer(80000000);
-var off = 0;
-decoder.on('data', function (chunk) {
-  //raw = Buffer.concat([raw, chunk]);
-  chunk.copy(raw, off);
-  off += chunk.length;
-});
-decoder.on('end', function () {
-  var samples = [];
-  for (i = 0; i < (off / 4); i++ ) {
-    samples[i] = raw.readInt16LE(i * 4);
-  };
-  console.log('got', samples.length, 'samples,', samples.length / 44100, 'seconds');
-  
-  var max = 0;
-  for (var i = 0; i < samples.length; i++) {
-    max = Math.max(max, samples[i]);
-    //console.log(new Array(Math.round(samples[i]/1000+50)).join(' ') + '#');
-  }
-  console.log(max);
-  
-  /*
-  var win = 512*10; // 5*4410;
-  var bt = new BeatDet(win);
-  for (var i = 0; i < samples.length; i += win) {
-    var o = [];
-    bt.do(samples.slice(i, i + win), o);
-  console.log('bpm:', bt.get_bpm());
-  console.log('confid:', bt.get_confidence());
-    //console.log(o);
-  }
-  console.log('bpm:', bt.get_bpm());
-  console.log('confid:', bt.get_confidence());
-  *
-});
-
-var idx = 0
-var s=setInterval(function () {
-  output.write(raw.slice(idx * 44100, (idx+1) * 44100));
-  if ((idx+1)*44100 >= off) { clearInterval(s); console.log('done'); }
-  idx++;
-  console.log((idx+1)*44100 / off)
-}, 1000/4);
-
-//decoder.on('data', function (raw) {
-//  console.log(raw);
-//});
-
-/*
-// create the Encoder instance
-var encoder = new lame.Encoder({
-  channels: 2,        // 2 channels (left and right)
-  bitDepth: 16,       // 16-bit samples
-  sampleRate: 44100   // 44,100 Hz sample rate
-});
-
-// raw PCM data from stdin gets piped into the encoder
-process.stdin.pipe(encoder);
-
-// the generated MP3 file gets piped to stdout
-encoder.pipe(process.stdout);
-*/
