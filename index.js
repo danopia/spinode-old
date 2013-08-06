@@ -27,6 +27,6 @@ Reactor.start();
 
 process.stdin.on('data', function (d) {
   console.log('ret');
-  player1.paused = !player1.paused;
+  player1.lofi = !player1.lofi;
 });
 

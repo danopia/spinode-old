@@ -4,6 +4,11 @@ var Player = module.exports = function (loader) {
   this.chunk = 0;
   this.sample = 0;
   this.multiplier = 0.7;
+  
+  this.lofi = false;
+  this.bitClock = 0;
+  this.bitStore = [0,0];
+  this.bitRate = 15;
 };
 
 Player.prototype.next = function () {
@@ -17,6 +22,17 @@ Player.prototype.next = function () {
     this.sample = 0;
   };
   
-  return this.samples[this.sample++];
+  var sample = this.samples[this.sample++];
+  
+  if (this.lofi) {
+    if (this.bitClock++ >= this.bitRate) {
+      this.bitStore = sample;
+      this.bitClock = 0;
+    } else {
+      sample = this.bitStore;
+    };
+  };
+  
+  return sample;
 };
 
