@@ -15,7 +15,7 @@ loader2.on('metadata', function (meta)   { console.log(meta);   });
 loader2.on('format',   function (format) { console.log(format); });
 loader2.loadMp3(fs.createReadStream('getlucky.mp3'));
 
-var player1 = new Player(loader2);
+var player1 = new Player(loader1);
 setTimeout(function () {
   Reactor.cues[Reactor.samplesGenerated] = player1;
 }, 1000);
